@@ -46,7 +46,7 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
                 fragment = new HomeFragment();
                 break;
             case R.id.menu_item_tv_trending:
-                setActionBarTitle("Trending");
+                setActionBarTitle("Airing Today");
                 fragment = new TrendingFragment();
 
                 break;

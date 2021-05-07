@@ -6,9 +6,11 @@
     tools:context=".TrendingFragment">
 
     <!-- TODO: Update blank fragment layout -->
-    <TextView
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_tv_show"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:text="Trending Fragment" />
-
+        tools:listitem="@layout/recycler_view_tv_show"
+        android:paddingBottom="60dp"
+        />
 </FrameLayout>

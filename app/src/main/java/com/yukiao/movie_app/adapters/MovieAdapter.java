@@ -40,11 +40,16 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ViewHolder> 
                 .load(Const.IMG_URL_200 + nowPlayings.get(position).getCover())
                 .into(holder.ivCover);
         holder.tvTitle.setText(nowPlayings.get(position).getTitle());
+
     }
 
     @Override
     public int getItemCount() {
         return nowPlayings.size();
+    }
+
+    public void appendList(List<Movies> extraMovie){
+        nowPlayings.addAll(extraMovie);
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {

@@ -8,6 +8,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -38,12 +39,16 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class MovieFragment extends Fragment implements OnItemClick, SearchView.OnQueryTextListener {
+public class MovieFragment extends Fragment implements OnItemClick, SearchView.OnQueryTextListener, SwipeRefreshLayout.OnRefreshListener {
     private RecyclerView recyclerView;
     private MovieAdapter adapter;
     private List<Movies> movies;
-    private ProgressBar progressBar;
+//    private ProgressBar progressBar;
     private String layoutName;
+    private int currentPage = 1;
+    private boolean isFetching;
+    private GridLayoutManager layoutManager;
+    private SwipeRefreshLayout refreshLayout;
 
     public MovieFragment(String layoutName){
         this.layoutName = layoutName;
@@ -59,30 +64,58 @@ public class MovieFragment extends Fragment implements OnItemClick, SearchView.O
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.fragment_movie, container, false);
 
-        progressBar = view.findViewById(R.id.pb_main);
+        View view = inflater.inflate(R.layout.fragment_movie, container, false);
+        refreshLayout = view.findViewById(R.id.srl_movie);
+//        progressBar = view.findViewById(R.id.pb_main);
 
         recyclerView = view.findViewById(R.id.rv_tv_show);
-        recyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 2));
-        loadData();
+        layoutManager = new GridLayoutManager(getContext(), 2);
+        recyclerView.setLayoutManager(layoutManager);
+        loadData(currentPage);
+        onScrollListener();
+
         return view;
     }
 
-    private void loadData() {
+    private void onScrollListener() {
+        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                int totalItem = layoutManager.getItemCount();
+                int visibleItem = layoutManager.getChildCount();
+                int firstVisibleItem = layoutManager.findFirstVisibleItemPosition();
+                if(firstVisibleItem + visibleItem >=totalItem /2){
+                    if(!isFetching){
+                        loadData(currentPage + 1);
+                    }
+                }
+            }
+        });
+
+    }
+
+    private void loadData(int page) {
+        isFetching = true;
         MovieApiInterface movieApiInterface = MovieApiClient.getRetrofit().create(MovieApiInterface.class);
-        Call<MoviesResponse> nowPlayingCall = getEndPointResource(movieApiInterface);
+        Call<MoviesResponse> nowPlayingCall = getEndPointResource(movieApiInterface, page);
         nowPlayingCall.enqueue(new Callback<MoviesResponse>() {
             @Override
             public void onResponse(Call<MoviesResponse> call, Response<MoviesResponse> response) {
                 try{
                     if(response.isSuccessful() && response.body().getNowPlayings() != null){
-                        progressBar.setVisibility(View.GONE);
-                        recyclerView.setVisibility(View.VISIBLE);
-                        movies = response.body().getNowPlayings();
-                        adapter = new MovieAdapter(movies, MovieFragment.this);
-                        recyclerView.setAdapter(adapter);
+//                        progressBar.setVisibility(View.GONE);
+                        if(adapter == null){
+                            recyclerView.setVisibility(View.VISIBLE);
+                            movies = response.body().getNowPlayings();
+                            adapter = new MovieAdapter(movies, MovieFragment.this);
+                            recyclerView.setAdapter(adapter);
+                        } else{
+                            adapter.appendList(response.body().getNowPlayings());
+                        }
+                        currentPage = page;
+                        isFetching = false;
+                        refreshLayout.setRefreshing(false);
                     }
                     else{
                         Toast.makeText(getActivity(), response.errorBody().string(), Toast.LENGTH_LONG).show();
@@ -107,14 +140,14 @@ public class MovieFragment extends Fragment implements OnItemClick, SearchView.O
         startActivity(detailActivity);
     }
 
-    private Call<MoviesResponse> getEndPointResource(MovieApiInterface movieApiInterface){
+    private Call<MoviesResponse> getEndPointResource(MovieApiInterface movieApiInterface, int page){
         switch (layoutName){
             case Const.NOW_PLAYING:
-                return movieApiInterface.getNowPlaying(Const.API_KEY, 1);
+                return movieApiInterface.getNowPlaying(Const.API_KEY, page);
             case Const.UPCOMING:
-                return movieApiInterface.getUpcoming(Const.API_KEY,1);
+                return movieApiInterface.getUpcoming(Const.API_KEY,page);
             case Const.POPULAR:
-                return movieApiInterface.getPopular(Const.API_KEY, 1);
+                return movieApiInterface.getPopular(Const.API_KEY, page);
             default:
                 return null;
         }
@@ -131,17 +164,25 @@ public class MovieFragment extends Fragment implements OnItemClick, SearchView.O
 
     }
 
-    private void searchMovie(String keyword){
+    private void searchMovie(String keyword, int page){
+        isFetching = true;
         SearchApiInterface searchApiInterface = SearchApiClient.getRetrofit().create(SearchApiInterface.class);
-        Call<MoviesResponse> searchMovieCall = searchApiInterface.getSearchResult(Const.API_KEY, keyword);
+        Call<MoviesResponse> searchMovieCall = searchApiInterface.getSearchResult(Const.API_KEY, keyword, page);
         searchMovieCall.enqueue(new Callback<MoviesResponse>() {
             @Override
             public void onResponse(Call<MoviesResponse> call, Response<MoviesResponse> response) {
                 try{
                     if(response.isSuccessful() && response.body().getNowPlayings() != null){
-                        movies = response.body().getNowPlayings();
-                        adapter = new MovieAdapter(movies, MovieFragment.this);
-                        recyclerView.setAdapter(adapter);
+                        if(adapter == null){
+                            movies = response.body().getNowPlayings();
+                            adapter = new MovieAdapter(movies, MovieFragment.this);
+                            recyclerView.setAdapter(adapter);
+                        }else{
+                            adapter.appendList(response.body().getNowPlayings());
+                        }
+                        currentPage = page;
+                        isFetching = false;
+                        refreshLayout.setRefreshing(false);
                     }
                     else{
                         Toast.makeText(getActivity(), response.errorBody().string(), Toast.LENGTH_LONG).show();
@@ -167,10 +208,18 @@ public class MovieFragment extends Fragment implements OnItemClick, SearchView.O
     @Override
     public boolean onQueryTextChange(String s) {
         if (s.length() > 0) {
-            searchMovie(s);
+            adapter = null;
+            searchMovie(s,currentPage);
         }else{
-            loadData();
+            adapter = null;
+            loadData(currentPage);
         }
         return true;
+    }
+
+    @Override
+    public void onRefresh() {
+        adapter = null;
+        loadData(currentPage);
     }
 }

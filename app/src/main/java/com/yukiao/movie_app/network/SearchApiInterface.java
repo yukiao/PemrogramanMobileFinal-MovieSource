@@ -11,6 +11,7 @@ public interface SearchApiInterface {
     @GET("movie")
     Call<MoviesResponse> getSearchResult(
             @Query("api_key") String apiKey,
-            @Query("query") String query
+            @Query("query") String query,
+            @Query("page") int page
     );
 }

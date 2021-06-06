@@ -6,22 +6,17 @@
     tools:context=".fragments.MovieFragment">
 
     <!-- TODO: Update blank fragment layout -->
-    <ProgressBar
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_centerVertical="true"
-        android:id="@+id/pb_main"
-        android:layout_gravity="center"
-        android:indeterminateDrawable="@drawable/progress"
-        style="?android:attr/progressBarStyleLarge"
-
-        />
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rv_tv_show"
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/srl_movie"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        tools:listitem="@layout/recycler_view_movies"
-        android:paddingBottom="70dp"
-        />
+        android:layout_height="match_parent">
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv_tv_show"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            tools:listitem="@layout/recycler_view_movies"
+            android:paddingBottom="70dp"
+            />
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
 </FrameLayout>

@@ -13,6 +13,18 @@ public class Movie {
     @Expose
     private String title;
 
+    @SerializedName("backdrop_path")
+    @Expose
+    private String backdrop;
+
+    public String getBackdrop() {
+        return backdrop;
+    }
+
+    public void setBackdrop(String backdrop) {
+        this.backdrop = backdrop;
+    }
+
     @SerializedName("overview")
     @Expose
     private String description;

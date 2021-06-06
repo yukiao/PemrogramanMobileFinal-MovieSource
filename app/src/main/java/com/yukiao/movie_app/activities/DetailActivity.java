@@ -175,7 +175,7 @@ public class DetailActivity extends AppCompatActivity implements ActionBarTitle 
         favoriteImgUrl = movie.getCover();
 
         Glide.with(DetailActivity.this)
-                .load(Const.IMG_URL_300 + movie.getCover())
+                .load(Const.IMG_URL_300 + movie.getBackdrop())
                 .into(cover);
         title.setText(movie.getTitle());
         releaseYear.setText(movie.getReleaseDate().split("-")[0]);

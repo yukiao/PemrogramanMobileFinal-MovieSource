@@ -41,11 +41,11 @@
 
                     <ImageView
                         android:id="@+id/iv_detail_cover"
-                        android:layout_width="match_parent"
+                        android:layout_width="wrap_content"
                         android:layout_height="match_parent"
                         android:adjustViewBounds="true"
                         android:background="@drawable/gradient_shape"
-                        android:scaleType="matrix"
+                        android:scaleType="centerCrop"
                         />
 
                     <ImageView

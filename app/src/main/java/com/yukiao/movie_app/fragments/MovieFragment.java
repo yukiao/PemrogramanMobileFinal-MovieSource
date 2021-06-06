@@ -92,7 +92,6 @@ public class MovieFragment extends Fragment implements OnItemClick, SearchView.O
                 }
             }
         });
-
     }
 
     private void loadData(int page) {
@@ -109,6 +108,7 @@ public class MovieFragment extends Fragment implements OnItemClick, SearchView.O
                             recyclerView.setVisibility(View.VISIBLE);
                             movies = response.body().getNowPlayings();
                             adapter = new MovieAdapter(movies, MovieFragment.this);
+                            adapter.notifyDataSetChanged();
                             recyclerView.setAdapter(adapter);
                         } else{
                             adapter.appendList(response.body().getNowPlayings());
@@ -176,6 +176,7 @@ public class MovieFragment extends Fragment implements OnItemClick, SearchView.O
                         if(adapter == null){
                             movies = response.body().getNowPlayings();
                             adapter = new MovieAdapter(movies, MovieFragment.this);
+                            adapter.notifyDataSetChanged();
                             recyclerView.setAdapter(adapter);
                         }else{
                             adapter.appendList(response.body().getNowPlayings());

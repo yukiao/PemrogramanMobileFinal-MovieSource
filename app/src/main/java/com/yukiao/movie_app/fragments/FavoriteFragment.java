@@ -18,6 +18,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.SearchView;
+import android.widget.TextView;
 
 
 import com.yukiao.movie_app.activities.DetailActivity;
@@ -34,6 +35,7 @@ import java.util.List;
 public class FavoriteFragment extends Fragment implements OnItemClick, SearchView.OnQueryTextListener {
     private RecyclerView recyclerView;
     private AppDatabase database;
+    private TextView tvNotFound;
     private List<Favorite> favoriteList;
 
     @Override
@@ -49,6 +51,9 @@ public class FavoriteFragment extends Fragment implements OnItemClick, SearchVie
         View view = inflater.inflate(R.layout.fragment_favorite, container, false);
         database = AppDatabase.getInstance(getActivity().getApplicationContext());
 
+        tvNotFound = view.findViewById(R.id.tv_no_favorite_found);
+        tvNotFound.setVisibility(View.INVISIBLE);
+
         recyclerView = view.findViewById(R.id.rv_tv_show);
         recyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 2));
         loadData();
@@ -56,11 +61,15 @@ public class FavoriteFragment extends Fragment implements OnItemClick, SearchVie
     }
 
     private void loadData() {
+        tvNotFound.setVisibility(View.INVISIBLE);
         database.favoriteDao().getAll().observe(this, new Observer<List<Favorite>>() {
             @Override
             public void onChanged(List<Favorite> favorites) {
                 favoriteList = favorites;
                 recyclerView.setAdapter(new FavoriteAdapter(favorites, FavoriteFragment.this));
+                if(favorites.size()==0){
+                    tvNotFound.setVisibility(View.VISIBLE);
+                }
             }
         });
     }
@@ -76,11 +85,15 @@ public class FavoriteFragment extends Fragment implements OnItemClick, SearchVie
     }
 
     private void setFilteredFavorites(String s){
+        tvNotFound.setVisibility(View.INVISIBLE);
         database.favoriteDao().getFiltered(s).observe(this, new Observer<List<Favorite>>() {
             @Override
             public void onChanged(List<Favorite> favorites) {
                 favoriteList = favorites;
-                recyclerView.setAdapter(new FavoriteAdapter(favorites, FavoriteFragment.this));
+                    recyclerView.setAdapter(new FavoriteAdapter(favorites, FavoriteFragment.this));
+                if(favorites.size()==0){
+                    tvNotFound.setVisibility(View.VISIBLE);
+                }
             }
         });
     }
@@ -89,7 +102,6 @@ public class FavoriteFragment extends Fragment implements OnItemClick, SearchVie
     public void onClick(int pos) {
         Intent detailActivity = new Intent(getActivity(), DetailActivity.class);
         detailActivity.putExtra("ID", String.valueOf(favoriteList.get(pos).getId()));
-        detailActivity.putExtra("TYPE", "Movie");
         startActivity(detailActivity);
     }
 

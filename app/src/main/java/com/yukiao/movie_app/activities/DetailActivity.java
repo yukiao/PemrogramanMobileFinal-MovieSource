@@ -46,7 +46,7 @@ public class DetailActivity extends AppCompatActivity implements ActionBarTitle 
     private TextView title, releaseYear, duration, description, ratingNumber;
     private RatingBar rating;
     private ImageView cover;
-    private String id,type;
+    private String id;
     private RecyclerView recyclerView;
     private ArrayList<String> genres;
     private ProgressBar progressBar;
@@ -72,7 +72,7 @@ public class DetailActivity extends AppCompatActivity implements ActionBarTitle 
         constraintLayout.setVisibility(View.GONE);
 
         id = getIntent().getStringExtra("ID");
-        type = getIntent().getStringExtra("TYPE");
+
         genres = new ArrayList<>();
 
         title = findViewById(R.id.tv_detail_title);
@@ -84,22 +84,6 @@ public class DetailActivity extends AppCompatActivity implements ActionBarTitle 
         ratingNumber = findViewById(R.id.tv_detail_rating);
 
         loadData();
-
-        Log.d("DetailActivity", "From create view");
-//
-//        genres = new ArrayList<>();
-
-
-//
-//        setLayoutContent(movie);
-//
-//        insertGenre(movie.getGenre());
-//
-//        recyclerView = findViewById(R.id.rv_genre);
-//        recyclerView.setHasFixedSize(true);
-//        recyclerView.setLayoutManager(new LinearLayoutManager(this, RecyclerView.HORIZONTAL, false));
-//        recyclerView.setAdapter(new GenreRecyclerAdapter(genres, this));
-
     }
 
     public void loadData() {
@@ -227,10 +211,6 @@ public class DetailActivity extends AppCompatActivity implements ActionBarTitle 
             menu.getItem(0).setIcon(ContextCompat.getDrawable(this,R.drawable.ic_baseline_favorite));
             menu.getItem(0).getIcon().setColorFilter(getResources().getColor(R.color.active_tab_color), PorterDuff.Mode.SRC_ATOP);
         }
-
         return true;
     }
-
-
-
 }

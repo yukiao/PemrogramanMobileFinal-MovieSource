@@ -12,5 +12,12 @@
         tools:listitem="@layout/recycler_view_movies"
         android:paddingBottom="70dp"
         />
+    <TextView
+        android:id="@+id/tv_no_favorite_found"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/no_favorite_found"
+        android:layout_gravity="center"
+        />
 
 </FrameLayout>

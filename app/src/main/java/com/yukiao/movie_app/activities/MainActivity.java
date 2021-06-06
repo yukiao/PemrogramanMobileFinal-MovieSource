@@ -1,32 +1,30 @@
-package com.yukiao.movie_app;
+package com.yukiao.movie_app.activities;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
-import android.content.Context;
-import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.view.Gravity;
-import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.yukiao.movie_app.network.Const;
+import com.yukiao.movie_app.utils.ActionBarTitle;
+import com.yukiao.movie_app.R;
+import com.yukiao.movie_app.fragments.FavoriteFragment;
+import com.yukiao.movie_app.fragments.MovieFragment;
 
-import java.util.ArrayList;
+public class MainActivity extends AppCompatActivity implements BottomNavigationView.OnNavigationItemSelectedListener, ActionBarTitle {
 
-public class MainActivity extends AppCompatActivity implements BottomNavigationView.OnNavigationItemSelectedListener, OnItemClickListener<MovieModel>, ActionBarTitle{
-
-    private RecyclerView recyclerView;
-    private ArrayList<MovieModel> list;
+    private String layoutName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,26 +32,32 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
         setContentView(R.layout.activity_main);
         BottomNavigationView bottomNavigationView = findViewById(R.id.bnv_main);
         bottomNavigationView.setOnNavigationItemSelectedListener(this);
-        bottomNavigationView.setSelectedItemId(R.id.menu_item_tv_home);
+        bottomNavigationView.setSelectedItemId(R.id.menu_item_tv_now_playing);
     }
 
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         Fragment fragment = null;
         switch (item.getItemId()){
-            case R.id.menu_item_tv_home:
-                setActionBarTitle("Home");
-                fragment = new HomeFragment();
+            case R.id.menu_item_tv_now_playing:
+                layoutName = Const.NOW_PLAYING;
+                setActionBarTitle(layoutName);
+                fragment = new MovieFragment(layoutName);
                 break;
-            case R.id.menu_item_tv_trending:
-                setActionBarTitle("Airing Today");
-                fragment = new TrendingFragment();
-
+            case R.id.menu_item_tv_upcoming:
+                layoutName = Const.UPCOMING;
+                setActionBarTitle(layoutName);
+                fragment = new MovieFragment(layoutName);
                 break;
-            case R.id.menu_item_tv_account:
-                setActionBarTitle("Account");
-                fragment = new AccountFragment();
-
+            case R.id.menu_item_tv_popular:
+                layoutName = Const.POPULAR;
+                setActionBarTitle(layoutName);
+                fragment = new MovieFragment(layoutName);
+                break;
+            case R.id.menu_item_tv_favorites:
+                layoutName = Const.FAVORITES;
+                setActionBarTitle(layoutName);
+                fragment = new FavoriteFragment();
                 break;
         }
 
@@ -62,14 +66,6 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
             return true;
         }
         return false;
-    }
-
-    @Override
-    public void onClick(MovieModel movieModel) {
-        Intent detailActivity = new Intent(this,DetailActivity.class);
-        detailActivity.putExtra("MOVIE_DETAIL", (Parcelable) movieModel);
-        startActivity(detailActivity);
-
     }
 
     @Override
@@ -86,7 +82,15 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
 
         getSupportActionBar().setCustomView(view, params);
         getSupportActionBar().setBackgroundDrawable(new ColorDrawable(Color.parseColor("#070d2d")));
+        getSupportActionBar().setTitle(title);
         getSupportActionBar().setDisplayShowCustomEnabled(true);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
     }
+
+//    @Override
+//    public boolean onCreateOptionsMenu(Menu menu) {
+//        MenuInflater inflater = getMenuInflater();
+//        inflater.inflate(R.menu.movie_fragment_toolbar,menu);
+//        return true;
+//    }
 }

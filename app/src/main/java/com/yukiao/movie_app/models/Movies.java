@@ -4,7 +4,7 @@ package com.yukiao.movie_app.models;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-public class NowPlaying {
+public class Movies {
     private String id;
     private String title;
 

@@ -3,6 +3,8 @@ package com.yukiao.movie_app.fragments;
 import android.content.Intent;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -10,8 +12,12 @@ import androidx.recyclerview.widget.RecyclerView;
 
 
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.SearchView;
 
 
 import com.yukiao.movie_app.activities.DetailActivity;
@@ -25,16 +31,22 @@ import com.yukiao.movie_app.db.entities.Favorite;
 
 import java.util.List;
 
-public class AccountFragment extends Fragment implements OnItemClick {
+public class FavoriteFragment extends Fragment implements OnItemClick, SearchView.OnQueryTextListener {
     private RecyclerView recyclerView;
     private AppDatabase database;
     private List<Favorite> favoriteList;
 
     @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.fragment_account, container, false);
+        View view = inflater.inflate(R.layout.fragment_favorite, container, false);
         database = AppDatabase.getInstance(getActivity().getApplicationContext());
 
         recyclerView = view.findViewById(R.id.rv_tv_show);
@@ -48,11 +60,30 @@ public class AccountFragment extends Fragment implements OnItemClick {
             @Override
             public void onChanged(List<Favorite> favorites) {
                 favoriteList = favorites;
-                recyclerView.setAdapter(new FavoriteAdapter(favorites, AccountFragment.this));
+                recyclerView.setAdapter(new FavoriteAdapter(favorites, FavoriteFragment.this));
             }
         });
     }
 
+    @Override
+    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+        inflater.inflate(R.menu.movie_fragment_toolbar,menu);
+        MenuItem item = menu.findItem(R.id.menu_item_search);
+        SearchView searchView = (SearchView) item.getActionView();
+        searchView.setQueryHint("Search");
+        searchView.setOnQueryTextListener(this);
+        super.onCreateOptionsMenu(menu, inflater);
+    }
+
+    private void setFilteredFavorites(String s){
+        database.favoriteDao().getFiltered(s).observe(this, new Observer<List<Favorite>>() {
+            @Override
+            public void onChanged(List<Favorite> favorites) {
+                favoriteList = favorites;
+                recyclerView.setAdapter(new FavoriteAdapter(favorites, FavoriteFragment.this));
+            }
+        });
+    }
 
     @Override
     public void onClick(int pos) {
@@ -62,4 +93,19 @@ public class AccountFragment extends Fragment implements OnItemClick {
         startActivity(detailActivity);
     }
 
+    @Override
+    public boolean onQueryTextSubmit(String s) {
+        return true;
+    }
+
+    @Override
+    public boolean onQueryTextChange(String s) {
+        if(s.length()>0){
+            s = "%"+s+"%";
+            setFilteredFavorites(s);
+        }else{
+            loadData();
+        }
+        return true;
+    }
 }

@@ -1,17 +1,20 @@
-package com.yukiao.movie_app;
+package com.yukiao.movie_app.activities;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.graphics.Color;
+import android.graphics.PorterDuff;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
@@ -21,14 +24,16 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.yukiao.movie_app.db.AppDatabase;
+import com.yukiao.movie_app.db.entities.Favorite;
+import com.yukiao.movie_app.utils.ActionBarTitle;
+import com.yukiao.movie_app.adapters.GenreRecyclerAdapter;
+import com.yukiao.movie_app.R;
 import com.yukiao.movie_app.models.Genre;
 import com.yukiao.movie_app.models.movie.Movie;
-import com.yukiao.movie_app.models.tv.Tv;
 import com.yukiao.movie_app.network.Const;
 import com.yukiao.movie_app.network.MovieApiClient;
 import com.yukiao.movie_app.network.MovieApiInterface;
-import com.yukiao.movie_app.network.TVShowApiClient;
-import com.yukiao.movie_app.network.TVShowApiInterface;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,6 +51,9 @@ public class DetailActivity extends AppCompatActivity implements ActionBarTitle 
     private ArrayList<String> genres;
     private ProgressBar progressBar;
     private ConstraintLayout constraintLayout;
+    private String favoriteTitle, favoriteImgUrl = "";
+
+    private AppDatabase database;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,6 +62,8 @@ public class DetailActivity extends AppCompatActivity implements ActionBarTitle 
 
         getSupportActionBar().setBackgroundDrawable(new ColorDrawable(Color.parseColor("#070d2d")));
         getSupportActionBar().setTitle("");
+
+        database = AppDatabase.getInstance(getApplicationContext());
 
         progressBar = findViewById(R.id.pb_main);
         progressBar.setVisibility(View.VISIBLE);
@@ -93,9 +103,7 @@ public class DetailActivity extends AppCompatActivity implements ActionBarTitle 
     }
 
     public void loadData() {
-        if(type.equals("Movie")){
             MovieApiInterface movieApiInterface = MovieApiClient.getRetrofit().create(MovieApiInterface.class);
-
             Call<Movie> movieDetail = movieApiInterface.getMovie(id, Const.API_KEY);
             movieDetail.enqueue(new Callback<Movie>() {
                 @Override
@@ -117,33 +125,6 @@ public class DetailActivity extends AppCompatActivity implements ActionBarTitle 
                     Toast.makeText(DetailActivity.this, "Failed: "+ t.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
                 }
             });
-        }
-        else if(type.equals("TV Show")){
-            TVShowApiInterface tvShowApiInterface = TVShowApiClient.getRetrofit().create(TVShowApiInterface.class);
-
-            Call<Tv> tvDetail = tvShowApiInterface.getTVShow(id, Const.API_KEY);
-            tvDetail.enqueue(new Callback<Tv>() {
-                @Override
-                public void onResponse(Call<Tv> call, Response<Tv> response) {
-                    if(response.isSuccessful() && response.body() != null){
-                        progressBar.setVisibility(View.GONE);
-                        constraintLayout.setVisibility(View.VISIBLE);
-
-                        setActivityContent(response.body());
-                    }
-                    else {
-                        Toast.makeText(DetailActivity.this, "Error OnResponse", Toast.LENGTH_SHORT).show();
-                    }
-                }
-
-                @Override
-                public void onFailure(Call<Tv> call, Throwable t) {
-                    Log.d("DetailActivity", "onFailure: " + t.getLocalizedMessage());
-                    Toast.makeText(DetailActivity.this, "Failed: "+ t.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
-                }
-            });
-        }
-
     }
 
     @Override
@@ -151,6 +132,32 @@ public class DetailActivity extends AppCompatActivity implements ActionBarTitle 
         switch (item.getItemId()) {
             case android.R.id.home:
                 finish();
+                return true;
+            case R.id.menu_like:
+                int movieId = Integer.parseInt(id);
+                boolean exists = database.favoriteDao().isExists(movieId);
+
+                if(exists){
+                    Favorite favorite = database.favoriteDao().findById(movieId);
+                    database.favoriteDao().delete(favorite).subscribe(() -> {
+                        item.setIcon(ContextCompat.getDrawable(this,R.drawable.ic_baseline_favorite_border));
+                        Toast.makeText(this, "Removed From favorite", Toast.LENGTH_SHORT).show();
+                    }, throwable -> {
+                        Toast.makeText(this, "Operation Failed", Toast.LENGTH_SHORT).show();
+                    });
+
+                }else{
+                    Favorite favorite = new Favorite(movieId,favoriteTitle, favoriteImgUrl);
+                    database.favoriteDao().addFavorite(favorite).subscribe(() -> {
+                        item.setIcon(ContextCompat.getDrawable(this,R.drawable.ic_baseline_favorite));
+                        item.getIcon().setColorFilter(getResources().getColor(R.color.active_tab_color), PorterDuff.Mode.SRC_ATOP);
+
+                        Toast.makeText(this, "Added to Favorite", Toast.LENGTH_SHORT).show();
+                    }, throwable -> {
+                        Toast.makeText(this, "Failed To Add", Toast.LENGTH_SHORT).show();
+                    });
+                }
+
                 return true;
         }
         return super.onOptionsItemSelected(item);
@@ -167,15 +174,22 @@ public class DetailActivity extends AppCompatActivity implements ActionBarTitle 
         TextView titleBar = view.findViewById(R.id.tv_ab_title);
         titleBar.setText(title);
 
-        getSupportActionBar().setCustomView(view, params);
-        getSupportActionBar().setBackgroundDrawable(new ColorDrawable(Color.parseColor("#070d2d")));
-        getSupportActionBar().setDisplayShowCustomEnabled(true);
-        getSupportActionBar().setDisplayShowTitleEnabled(false);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        ActionBar actionBar = getSupportActionBar();
+
+        actionBar.setCustomView(view, params);
+        actionBar.setBackgroundDrawable(new ColorDrawable(Color.parseColor("#070d2d")));
+        actionBar.setDisplayShowCustomEnabled(true);
+        actionBar.setDisplayShowTitleEnabled(false);
+        actionBar.setDisplayHomeAsUpEnabled(true);
+        actionBar.setHomeAsUpIndicator(R.drawable.ic_baseline_chevron_left);
 
     }
 
     private void setActivityContent(Movie movie){
+
+        favoriteTitle = movie.getTitle();
+        favoriteImgUrl = movie.getCover();
+
         Glide.with(DetailActivity.this)
                 .load(Const.IMG_URL_300 + movie.getCover())
                 .into(cover);
@@ -194,29 +208,29 @@ public class DetailActivity extends AppCompatActivity implements ActionBarTitle 
         setActionBarTitle(movie.getTitle());
     }
 
-    private void setActivityContent(Tv tv){
-        Glide.with(DetailActivity.this)
-                .load(Const.IMG_URL_300 + tv.getCover()).into(cover);
-        title.setText(tv.getTitle());
-        releaseYear.setText(tv.getFirstRelease().split("-")[0]);
-        rating.setRating((float) tv.getRating()/2);
-        description.setText(tv.getDescription());
-        ratingNumber.setText(String.valueOf(tv.getRating()));
-        duration.setText(tv.getDuration()[0] + "min");
-
-        setGenres(tv.getGenres());
-
-        recyclerView = findViewById(R.id.rv_genre);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this, RecyclerView.HORIZONTAL, false));
-        recyclerView.setAdapter(new GenreRecyclerAdapter(genres, this));
-        setActionBarTitle(tv.getTitle());
-    }
-
     private void setGenres(List<Genre> genresList){
         for(int i = 0; i< genresList.size(); i++){
             genres.add(genresList.get(i).getName());
         }
     }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.movie_detail_toolbar, menu);
+
+        int movieId = Integer.parseInt(id);
+        boolean exists = database.favoriteDao().isExists(movieId);
+
+        if(!exists){
+            menu.getItem(0).setIcon(ContextCompat.getDrawable(this,R.drawable.ic_baseline_favorite_border));
+        }else{
+            menu.getItem(0).setIcon(ContextCompat.getDrawable(this,R.drawable.ic_baseline_favorite));
+            menu.getItem(0).getIcon().setColorFilter(getResources().getColor(R.color.active_tab_color), PorterDuff.Mode.SRC_ATOP);
+        }
+
+        return true;
+    }
+
 
 
 }

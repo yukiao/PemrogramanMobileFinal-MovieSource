@@ -4,7 +4,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.RatingBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -12,30 +11,31 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.yukiao.movie_app.R;
-import com.yukiao.movie_app.models.NowPlaying;
+import com.yukiao.movie_app.models.Movies;
 import com.yukiao.movie_app.network.Const;
+import com.yukiao.movie_app.utils.OnItemClick;
 
 import java.util.List;
 
-public class NowPlayingAdapter extends RecyclerView.Adapter<NowPlayingAdapter.ViewHolder> {
-    private List<NowPlaying> nowPlayings;
+public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ViewHolder> {
+    private List<Movies> nowPlayings;
     private OnItemClick onItemClick;
 
 
-    public NowPlayingAdapter(List<NowPlaying> nowPlayings, OnItemClick onItemClick){
+    public MovieAdapter(List<Movies> nowPlayings, OnItemClick onItemClick){
         this.nowPlayings = nowPlayings;
         this.onItemClick = onItemClick;
     }
 
     @NonNull
     @Override
-    public NowPlayingAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.recycler_view_tv_show, parent, false);
+    public MovieAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.recycler_view_movies, parent, false);
         return new ViewHolder(view, onItemClick);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull NowPlayingAdapter.ViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull MovieAdapter.ViewHolder holder, int position) {
         Glide.with(holder.itemView.getContext())
                 .load(Const.IMG_URL_200 + nowPlayings.get(position).getCover())
                 .into(holder.ivCover);

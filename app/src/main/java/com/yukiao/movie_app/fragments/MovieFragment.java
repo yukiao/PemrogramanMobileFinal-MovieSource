@@ -67,6 +67,7 @@ public class MovieFragment extends Fragment implements OnItemClick, SearchView.O
 
         View view = inflater.inflate(R.layout.fragment_movie, container, false);
         refreshLayout = view.findViewById(R.id.srl_movie);
+        refreshLayout.setOnRefreshListener(this);
 //        progressBar = view.findViewById(R.id.pb_main);
 
         recyclerView = view.findViewById(R.id.rv_tv_show);

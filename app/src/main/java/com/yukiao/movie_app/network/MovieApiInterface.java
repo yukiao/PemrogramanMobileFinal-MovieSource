@@ -5,6 +5,7 @@ import retrofit2.http.GET;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 
+import com.yukiao.movie_app.models.CastResponse;
 import com.yukiao.movie_app.models.MoviesResponse;
 import com.yukiao.movie_app.models.movie.Movie;
 
@@ -18,6 +19,12 @@ public interface MovieApiInterface {
 
     @GET("{movie_id}")
     Call<Movie> getMovie(
+            @Path("movie_id") String id,
+            @Query("api_key") String apiKey
+    );
+
+    @GET("{movie_id}/credits")
+    Call<CastResponse> getCast(
             @Path("movie_id") String id,
             @Query("api_key") String apiKey
     );

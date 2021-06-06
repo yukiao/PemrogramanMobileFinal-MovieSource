@@ -24,8 +24,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.yukiao.movie_app.adapters.CastAdapter;
 import com.yukiao.movie_app.db.AppDatabase;
 import com.yukiao.movie_app.db.entities.Favorite;
+import com.yukiao.movie_app.models.CastResponse;
+import com.yukiao.movie_app.models.Casts;
 import com.yukiao.movie_app.utils.ActionBarTitle;
 import com.yukiao.movie_app.adapters.GenreRecyclerAdapter;
 import com.yukiao.movie_app.R;
@@ -47,8 +50,9 @@ public class DetailActivity extends AppCompatActivity implements ActionBarTitle 
     private RatingBar rating;
     private ImageView cover;
     private String id;
-    private RecyclerView recyclerView;
+    private RecyclerView recyclerView, recyclerViewCast;
     private ArrayList<String> genres;
+
     private ProgressBar progressBar;
     private ConstraintLayout constraintLayout;
     private String favoriteTitle, favoriteImgUrl = "";
@@ -75,6 +79,7 @@ public class DetailActivity extends AppCompatActivity implements ActionBarTitle 
 
         genres = new ArrayList<>();
 
+
         title = findViewById(R.id.tv_detail_title);
         releaseYear = findViewById(R.id.tv_detail_release_year);
         duration = findViewById(R.id.tv_detail_duration);
@@ -93,10 +98,23 @@ public class DetailActivity extends AppCompatActivity implements ActionBarTitle 
                 @Override
                 public void onResponse(Call<Movie> call, Response<Movie> response) {
                     if(response.isSuccessful() && response.body() != null){
-                        progressBar.setVisibility(View.GONE);
-                        constraintLayout.setVisibility(View.VISIBLE);
-                        setActivityContent(response.body());
-                        Log.d("DetailActivity", "From Response");
+                        Call<CastResponse> casts = movieApiInterface.getCast(id, Const.API_KEY);
+                        casts.enqueue(new Callback<CastResponse>() {
+                            @Override
+                            public void onResponse(Call<CastResponse> call, Response<CastResponse> responseCast) {
+                                if(responseCast.isSuccessful() && responseCast.body() !=null){
+                                    progressBar.setVisibility(View.GONE);
+                                    constraintLayout.setVisibility(View.VISIBLE);
+
+                                    setActivityContent(response.body(), responseCast.body());
+                                }
+                            }
+
+                            @Override
+                            public void onFailure(Call<CastResponse> call, Throwable t) {
+
+                            }
+                        });
                     }
                     else {
                         Toast.makeText(DetailActivity.this, "Error OnResponse", Toast.LENGTH_SHORT).show();
@@ -169,7 +187,8 @@ public class DetailActivity extends AppCompatActivity implements ActionBarTitle 
 
     }
 
-    private void setActivityContent(Movie movie){
+
+    private void setActivityContent(Movie movie, CastResponse castResponse){
 
         favoriteTitle = movie.getTitle();
         favoriteImgUrl = movie.getCover();
@@ -190,6 +209,11 @@ public class DetailActivity extends AppCompatActivity implements ActionBarTitle 
         recyclerView.setLayoutManager(new LinearLayoutManager(this, RecyclerView.HORIZONTAL, false));
         recyclerView.setAdapter(new GenreRecyclerAdapter(genres, this));
         setActionBarTitle(movie.getTitle());
+
+        recyclerViewCast = findViewById(R.id.rv_cast);
+        recyclerViewCast.setLayoutManager(new LinearLayoutManager(this, RecyclerView.HORIZONTAL, false));
+        recyclerViewCast.setAdapter(new CastAdapter(castResponse.getCasts()));
+
     }
 
     private void setGenres(List<Genre> genresList){

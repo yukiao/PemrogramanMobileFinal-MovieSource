@@ -10,6 +10,8 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
+import com.bumptech.glide.request.RequestOptions;
 import com.yukiao.movie_app.R;
 import com.yukiao.movie_app.db.entities.Favorite;
 import com.yukiao.movie_app.network.Const;
@@ -37,6 +39,7 @@ public class FavoriteAdapter extends RecyclerView.Adapter<FavoriteAdapter.ViewHo
     public void onBindViewHolder(@NonNull  FavoriteAdapter.ViewHolder holder, int position) {
         Glide.with(holder.itemView.getContext())
                 .load(Const.IMG_URL_200 + favorites.get(position).getImgUrl())
+                .apply(RequestOptions.bitmapTransform(new RoundedCorners(25)))
                 .into(holder.ivCover);
         holder.tvTitle.setText(favorites.get(position).getTitle());
     }

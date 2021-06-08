@@ -24,6 +24,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
+import com.bumptech.glide.request.RequestOptions;
 import com.yukiao.movie_app.adapters.CastAdapter;
 import com.yukiao.movie_app.db.AppDatabase;
 import com.yukiao.movie_app.db.entities.Favorite;
@@ -48,7 +50,7 @@ import retrofit2.Response;
 public class DetailActivity extends AppCompatActivity implements ActionBarTitle {
     private TextView title, releaseYear, duration, description, ratingNumber;
     private RatingBar rating;
-    private ImageView cover;
+    private ImageView cover, posterDetail;
     private String id;
     private RecyclerView recyclerView, recyclerViewCast;
     private ArrayList<String> genres;
@@ -85,6 +87,7 @@ public class DetailActivity extends AppCompatActivity implements ActionBarTitle 
         duration = findViewById(R.id.tv_detail_duration);
         rating = findViewById(R.id.rb_detail);
         cover = findViewById(R.id.iv_detail_cover);
+        posterDetail = findViewById(R.id.iv_poster_detail);
         description = findViewById(R.id.tv_detail_description);
         ratingNumber = findViewById(R.id.tv_detail_rating);
 
@@ -194,8 +197,13 @@ public class DetailActivity extends AppCompatActivity implements ActionBarTitle 
         favoriteImgUrl = movie.getCover();
 
         Glide.with(DetailActivity.this)
-                .load(Const.IMG_URL_300 + movie.getBackdrop())
+                .load(Const.IMG_URL_200 + movie.getBackdrop())
                 .into(cover);
+
+        Glide.with(DetailActivity.this)
+                .load(Const.IMG_URL_200 + movie.getCover())
+                .apply(RequestOptions.bitmapTransform(new RoundedCorners(25)))
+                .into(posterDetail);
         title.setText(movie.getTitle());
         releaseYear.setText(movie.getReleaseDate().split("-")[0]);
         duration.setText(movie.getDuration() + "min");

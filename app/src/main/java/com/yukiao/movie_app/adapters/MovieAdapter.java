@@ -10,6 +10,8 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
+import com.bumptech.glide.request.RequestOptions;
 import com.yukiao.movie_app.R;
 import com.yukiao.movie_app.models.Movies;
 import com.yukiao.movie_app.network.Const;
@@ -38,6 +40,7 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ViewHolder> 
     public void onBindViewHolder(@NonNull MovieAdapter.ViewHolder holder, int position) {
         Glide.with(holder.itemView.getContext())
                 .load(Const.IMG_URL_200 + nowPlayings.get(position).getCover())
+                .apply(RequestOptions.bitmapTransform(new RoundedCorners(25)))
                 .into(holder.ivCover);
         holder.tvTitle.setText(nowPlayings.get(position).getTitle());
 

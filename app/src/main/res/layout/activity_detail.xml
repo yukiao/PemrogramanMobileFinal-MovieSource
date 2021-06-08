@@ -57,6 +57,14 @@
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:background="@drawable/gradient_shape" />
+                    <ImageView
+                        android:id="@+id/iv_poster_detail"
+                        android:layout_width="200dp"
+                        android:layout_height="220dp"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_marginTop="30dp"
+                        android:src="@drawable/age_of_ultron"
+                         />
 
                     <androidx.constraintlayout.widget.ConstraintLayout
                         android:layout_width="match_parent"
@@ -145,6 +153,8 @@
                             android:textColor="@color/text_white"
                             android:textSize="28sp"
                             android:textStyle="bold"
+                            android:maxLines="2"
+                            android:ellipsize="end"
                             app:layout_constraintBottom_toTopOf="@id/cl_info" />
 
 

@@ -9,5 +9,6 @@
     <string name="popular">Popular</string>
     <string name="favorites">Favorites</string>
     <string name="no_favorite_found">No favorite found</string>
+    <string name="character_name">Character Name</string>
 
 </resources>

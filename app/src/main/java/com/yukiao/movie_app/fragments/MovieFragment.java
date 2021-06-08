@@ -43,7 +43,6 @@ public class MovieFragment extends Fragment implements OnItemClick, SearchView.O
     private RecyclerView recyclerView;
     private MovieAdapter adapter;
     private List<Movies> movies;
-//    private ProgressBar progressBar;
     private String layoutName;
     private int currentPage = 1;
     private boolean isFetching;
@@ -222,6 +221,7 @@ public class MovieFragment extends Fragment implements OnItemClick, SearchView.O
     @Override
     public void onRefresh() {
         adapter = null;
+        currentPage = 1;
         loadData(currentPage);
     }
 }

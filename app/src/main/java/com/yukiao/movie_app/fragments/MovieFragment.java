@@ -48,6 +48,7 @@ public class MovieFragment extends Fragment implements OnItemClick, SearchView.O
     private boolean isFetching;
     private GridLayoutManager layoutManager;
     private SwipeRefreshLayout refreshLayout;
+    private SearchView searchView;
 
     public MovieFragment(String layoutName){
         this.layoutName = layoutName;
@@ -157,7 +158,7 @@ public class MovieFragment extends Fragment implements OnItemClick, SearchView.O
     public void onCreateOptionsMenu(@NonNull  Menu menu, @NonNull  MenuInflater inflater) {
         inflater.inflate(R.menu.movie_fragment_toolbar,menu);
         MenuItem item = menu.findItem(R.id.menu_item_search);
-        SearchView searchView = (SearchView) item.getActionView();
+        searchView = (SearchView) item.getActionView();
         searchView.setQueryHint("Search");
         searchView.setOnQueryTextListener(this);
         super.onCreateOptionsMenu(menu, inflater);
@@ -223,5 +224,14 @@ public class MovieFragment extends Fragment implements OnItemClick, SearchView.O
         adapter = null;
         currentPage = 1;
         loadData(currentPage);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        if(searchView != null){
+            searchView.setQuery("", false);
+            searchView.setIconified(true);
+        }
     }
 }

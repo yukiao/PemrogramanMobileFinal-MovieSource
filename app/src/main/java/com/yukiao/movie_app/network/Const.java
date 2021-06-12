@@ -1,6 +1,7 @@
 package com.yukiao.movie_app.network;
 
 public class Const {
+        public static final String BASE_URL_ORIGINAL= "https://api.themoviedb.org/3/";
         public static final String BASE_URL = "https://api.themoviedb.org/3/movie/";
         public static final String BASE_URL_SEARCH = "https://api.themoviedb.org/3/search/";
 

@@ -15,8 +15,8 @@ import java.util.ArrayList;
 
 public class GenreRecyclerAdapter extends RecyclerView.Adapter<GenreRecyclerAdapter.ViewHolder>
 {
-    private ArrayList<String> genres;
-    private Context mContext;
+    private final ArrayList<String> genres;
+    private final Context mContext;
 
     public GenreRecyclerAdapter(ArrayList<String> genres, Context context){
         this.genres = genres;
@@ -44,7 +44,7 @@ public class GenreRecyclerAdapter extends RecyclerView.Adapter<GenreRecyclerAdap
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
-        private TextView tvGenre;
+        private final TextView tvGenre;
 
         public ViewHolder(View itemView){
             super(itemView);

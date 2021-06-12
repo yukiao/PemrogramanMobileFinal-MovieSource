@@ -21,7 +21,7 @@ import de.hdodenhof.circleimageview.CircleImageView;
 
 public class CastAdapter extends RecyclerView.Adapter<CastAdapter.ViewHolder> {
 
-    private List<Casts> casts;
+    private final List<Casts> casts;
 
 
     public CastAdapter(List<Casts> casts){
@@ -43,7 +43,7 @@ public class CastAdapter extends RecyclerView.Adapter<CastAdapter.ViewHolder> {
                         .getProfilePicture())
                 .into(holder.civProfile);
         holder.tvActorName.setText(casts.get(position).getName());
-        holder.tvCharacterName.setText(casts.get(position).getCharacter());
+        holder.tvCharacterName.setText("( " + casts.get(position).getCharacter() + " )");
     }
 
     @Override

@@ -101,7 +101,7 @@ public class FavoriteFragment extends Fragment implements OnItemClick, SearchVie
     @Override
     public void onClick(int pos) {
         Intent detailActivity = new Intent(getActivity(), DetailActivity.class);
-        detailActivity.putExtra("ID", String.valueOf(favoriteList.get(pos).getId()));
+        detailActivity.putExtra("ID", favoriteList.get(pos).getId());
         startActivity(detailActivity);
     }
 

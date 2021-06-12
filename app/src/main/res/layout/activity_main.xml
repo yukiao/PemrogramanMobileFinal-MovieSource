@@ -20,7 +20,8 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:menu="@menu/menu"
         android:background="#070D2D"
-        android:theme="@style/BottomNavigationTheme"
+        app:itemIconTint="@drawable/tab_color"
+        app:itemTextColor="@drawable/tab_color"
         app:labelVisibilityMode="unlabeled"
         />
 

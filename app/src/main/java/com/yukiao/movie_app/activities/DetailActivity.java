@@ -12,7 +12,6 @@ import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -29,36 +28,30 @@ import com.bumptech.glide.request.RequestOptions;
 import com.yukiao.movie_app.adapters.CastAdapter;
 import com.yukiao.movie_app.db.AppDatabase;
 import com.yukiao.movie_app.db.entities.Favorite;
-import com.yukiao.movie_app.models.CastResponse;
 import com.yukiao.movie_app.models.Casts;
+import com.yukiao.movie_app.network.repository.MovieRepository;
+import com.yukiao.movie_app.network.repository.callback.OnMovieDetailCallback;
 import com.yukiao.movie_app.utils.ActionBarTitle;
 import com.yukiao.movie_app.adapters.GenreRecyclerAdapter;
 import com.yukiao.movie_app.R;
 import com.yukiao.movie_app.models.Genre;
 import com.yukiao.movie_app.models.movie.Movie;
 import com.yukiao.movie_app.network.Const;
-import com.yukiao.movie_app.network.MovieApiClient;
-import com.yukiao.movie_app.network.MovieApiInterface;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 public class DetailActivity extends AppCompatActivity implements ActionBarTitle {
     private TextView title, releaseYear, duration, description, ratingNumber;
     private RatingBar rating;
     private ImageView cover, posterDetail;
-    private String id;
+    private int id;
     private RecyclerView recyclerView, recyclerViewCast;
     private ArrayList<String> genres;
-
     private ProgressBar progressBar;
     private ConstraintLayout constraintLayout;
     private String favoriteTitle, favoriteImgUrl = "";
-
+    private MovieRepository repository;
     private AppDatabase database;
 
     @Override
@@ -71,13 +64,15 @@ public class DetailActivity extends AppCompatActivity implements ActionBarTitle 
 
         database = AppDatabase.getInstance(getApplicationContext());
 
+        repository = MovieRepository.getInstance();
+
         progressBar = findViewById(R.id.pb_main);
         progressBar.setVisibility(View.VISIBLE);
 
         constraintLayout = findViewById(R.id.constraintLayout);
         constraintLayout.setVisibility(View.GONE);
 
-        id = getIntent().getStringExtra("ID");
+        id = getIntent().getIntExtra("ID",0);
 
         genres = new ArrayList<>();
 
@@ -91,45 +86,23 @@ public class DetailActivity extends AppCompatActivity implements ActionBarTitle 
         description = findViewById(R.id.tv_detail_description);
         ratingNumber = findViewById(R.id.tv_detail_rating);
 
-        loadData();
+        getRepositoryData();
     }
 
-    public void loadData() {
-            MovieApiInterface movieApiInterface = MovieApiClient.getRetrofit().create(MovieApiInterface.class);
-            Call<Movie> movieDetail = movieApiInterface.getMovie(id, Const.API_KEY);
-            movieDetail.enqueue(new Callback<Movie>() {
-                @Override
-                public void onResponse(Call<Movie> call, Response<Movie> response) {
-                    if(response.isSuccessful() && response.body() != null){
-                        Call<CastResponse> casts = movieApiInterface.getCast(id, Const.API_KEY);
-                        casts.enqueue(new Callback<CastResponse>() {
-                            @Override
-                            public void onResponse(Call<CastResponse> call, Response<CastResponse> responseCast) {
-                                if(responseCast.isSuccessful() && responseCast.body() !=null){
-                                    progressBar.setVisibility(View.GONE);
-                                    constraintLayout.setVisibility(View.VISIBLE);
+    private void getRepositoryData(){
+        repository.getMovieDetail(id, new OnMovieDetailCallback() {
+            @Override
+            public void onSuccess(Movie movie, List<Casts> casts, String message) {
+                progressBar.setVisibility(View.GONE);
+                constraintLayout.setVisibility(View.VISIBLE);
+                setActivityContent(movie, casts);
+            }
 
-                                    setActivityContent(response.body(), responseCast.body());
-                                }
-                            }
-
-                            @Override
-                            public void onFailure(Call<CastResponse> call, Throwable t) {
-
-                            }
-                        });
-                    }
-                    else {
-                        Toast.makeText(DetailActivity.this, "Error OnResponse", Toast.LENGTH_SHORT).show();
-                    }
-                }
-
-                @Override
-                public void onFailure(Call<Movie> call, Throwable t) {
-                    Log.d("DetailActivity", "onFailure: " + t.getLocalizedMessage());
-                    Toast.makeText(DetailActivity.this, "Failed: "+ t.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
-                }
-            });
+            @Override
+            public void onFailure(String message) {
+                Toast.makeText(DetailActivity.this, message, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     @Override
@@ -139,7 +112,7 @@ public class DetailActivity extends AppCompatActivity implements ActionBarTitle 
                 finish();
                 return true;
             case R.id.menu_like:
-                int movieId = Integer.parseInt(id);
+                int movieId = id;
                 boolean exists = database.favoriteDao().isExists(movieId);
 
                 if(exists){
@@ -167,7 +140,6 @@ public class DetailActivity extends AppCompatActivity implements ActionBarTitle 
         }
         return super.onOptionsItemSelected(item);
     }
-//
     public void setActionBarTitle(String title){
         View view = getLayoutInflater().inflate(R.layout.action_bar,null);
         ActionBar.LayoutParams params = new ActionBar.LayoutParams(
@@ -191,7 +163,7 @@ public class DetailActivity extends AppCompatActivity implements ActionBarTitle 
     }
 
 
-    private void setActivityContent(Movie movie, CastResponse castResponse){
+    private void setActivityContent(Movie movie, List<Casts> casts){
 
         favoriteTitle = movie.getTitle();
         favoriteImgUrl = movie.getCover();
@@ -220,7 +192,7 @@ public class DetailActivity extends AppCompatActivity implements ActionBarTitle 
 
         recyclerViewCast = findViewById(R.id.rv_cast);
         recyclerViewCast.setLayoutManager(new LinearLayoutManager(this, RecyclerView.HORIZONTAL, false));
-        recyclerViewCast.setAdapter(new CastAdapter(castResponse.getCasts()));
+        recyclerViewCast.setAdapter(new CastAdapter(casts));
 
     }
 
@@ -234,7 +206,7 @@ public class DetailActivity extends AppCompatActivity implements ActionBarTitle 
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.movie_detail_toolbar, menu);
 
-        int movieId = Integer.parseInt(id);
+        int movieId = id;
         boolean exists = database.favoriteDao().isExists(movieId);
 
         if(!exists){

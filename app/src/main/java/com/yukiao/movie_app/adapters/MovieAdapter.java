@@ -20,8 +20,8 @@ import com.yukiao.movie_app.utils.OnItemClick;
 import java.util.List;
 
 public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ViewHolder> {
-    private List<Movies> nowPlayings;
-    private OnItemClick onItemClick;
+    private final List<Movies> nowPlayings;
+    private final OnItemClick onItemClick;
 
 
     public MovieAdapter(List<Movies> nowPlayings, OnItemClick onItemClick){

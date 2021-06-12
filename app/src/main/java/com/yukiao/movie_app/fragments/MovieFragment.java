@@ -10,34 +10,26 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ProgressBar;
 import android.widget.SearchView;
 import android.widget.Toast;
 
 import com.yukiao.movie_app.activities.DetailActivity;
 import com.yukiao.movie_app.R;
 import com.yukiao.movie_app.adapters.MovieAdapter;
-import com.yukiao.movie_app.network.SearchApiClient;
-import com.yukiao.movie_app.network.SearchApiInterface;
+import com.yukiao.movie_app.network.repository.MovieRepository;
+import com.yukiao.movie_app.network.repository.callback.OnMovieCallback;
+import com.yukiao.movie_app.network.repository.callback.OnSearchCallback;
 import com.yukiao.movie_app.utils.OnItemClick;
 import com.yukiao.movie_app.models.Movies;
-import com.yukiao.movie_app.models.MoviesResponse;
 import com.yukiao.movie_app.network.Const;
-import com.yukiao.movie_app.network.MovieApiClient;
-import com.yukiao.movie_app.network.MovieApiInterface;
 
 import java.util.List;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 public class MovieFragment extends Fragment implements OnItemClick, SearchView.OnQueryTextListener, SwipeRefreshLayout.OnRefreshListener {
     private RecyclerView recyclerView;
@@ -49,6 +41,7 @@ public class MovieFragment extends Fragment implements OnItemClick, SearchView.O
     private GridLayoutManager layoutManager;
     private SwipeRefreshLayout refreshLayout;
     private SearchView searchView;
+    private MovieRepository repository;
 
     public MovieFragment(String layoutName){
         this.layoutName = layoutName;
@@ -68,12 +61,12 @@ public class MovieFragment extends Fragment implements OnItemClick, SearchView.O
         View view = inflater.inflate(R.layout.fragment_movie, container, false);
         refreshLayout = view.findViewById(R.id.srl_movie);
         refreshLayout.setOnRefreshListener(this);
-//        progressBar = view.findViewById(R.id.pb_main);
+        repository = MovieRepository.getInstance();
 
         recyclerView = view.findViewById(R.id.rv_tv_show);
         layoutManager = new GridLayoutManager(getContext(), 2);
         recyclerView.setLayoutManager(layoutManager);
-        loadData(currentPage);
+        getRepositoryData("",currentPage);
         onScrollListener();
 
         return view;
@@ -88,48 +81,9 @@ public class MovieFragment extends Fragment implements OnItemClick, SearchView.O
                 int firstVisibleItem = layoutManager.findFirstVisibleItemPosition();
                 if(firstVisibleItem + visibleItem >=totalItem /2){
                     if(!isFetching){
-                        loadData(currentPage + 1);
+                        getRepositoryData("",currentPage+1);
                     }
                 }
-            }
-        });
-    }
-
-    private void loadData(int page) {
-        isFetching = true;
-        MovieApiInterface movieApiInterface = MovieApiClient.getRetrofit().create(MovieApiInterface.class);
-        Call<MoviesResponse> nowPlayingCall = getEndPointResource(movieApiInterface, page);
-        nowPlayingCall.enqueue(new Callback<MoviesResponse>() {
-            @Override
-            public void onResponse(Call<MoviesResponse> call, Response<MoviesResponse> response) {
-                try{
-                    if(response.isSuccessful() && response.body().getNowPlayings() != null){
-//                        progressBar.setVisibility(View.GONE);
-                        if(adapter == null){
-                            recyclerView.setVisibility(View.VISIBLE);
-                            movies = response.body().getNowPlayings();
-                            adapter = new MovieAdapter(movies, MovieFragment.this);
-                            adapter.notifyDataSetChanged();
-                            recyclerView.setAdapter(adapter);
-                        } else{
-                            adapter.appendList(response.body().getNowPlayings());
-                        }
-                        currentPage = page;
-                        isFetching = false;
-                        refreshLayout.setRefreshing(false);
-                    }
-                    else{
-                        Toast.makeText(getActivity(), response.errorBody().string(), Toast.LENGTH_LONG).show();
-                    }
-                }catch(Exception e){
-                    e.printStackTrace();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<MoviesResponse> call, Throwable t) {
-                Log.d("Trending", "onFailure: " + t.getLocalizedMessage());
-                Toast.makeText(getActivity(), "Failed" + t.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -139,19 +93,6 @@ public class MovieFragment extends Fragment implements OnItemClick, SearchView.O
         Intent detailActivity = new Intent(getActivity(), DetailActivity.class);
         detailActivity.putExtra("ID", movies.get(pos).getId());
         startActivity(detailActivity);
-    }
-
-    private Call<MoviesResponse> getEndPointResource(MovieApiInterface movieApiInterface, int page){
-        switch (layoutName){
-            case Const.NOW_PLAYING:
-                return movieApiInterface.getNowPlaying(Const.API_KEY, page);
-            case Const.UPCOMING:
-                return movieApiInterface.getUpcoming(Const.API_KEY,page);
-            case Const.POPULAR:
-                return movieApiInterface.getPopular(Const.API_KEY, page);
-            default:
-                return null;
-        }
     }
 
     @Override
@@ -165,41 +106,78 @@ public class MovieFragment extends Fragment implements OnItemClick, SearchView.O
 
     }
 
-    private void searchMovie(String keyword, int page){
+    private void getRepositoryData(String query, int page){
         isFetching = true;
-        SearchApiInterface searchApiInterface = SearchApiClient.getRetrofit().create(SearchApiInterface.class);
-        Call<MoviesResponse> searchMovieCall = searchApiInterface.getSearchResult(Const.API_KEY, keyword, page);
-        searchMovieCall.enqueue(new Callback<MoviesResponse>() {
-            @Override
-            public void onResponse(Call<MoviesResponse> call, Response<MoviesResponse> response) {
-                try{
-                    if(response.isSuccessful() && response.body().getNowPlayings() != null){
-                        if(adapter == null){
-                            movies = response.body().getNowPlayings();
-                            adapter = new MovieAdapter(movies, MovieFragment.this);
-                            adapter.notifyDataSetChanged();
-                            recyclerView.setAdapter(adapter);
-                        }else{
-                            adapter.appendList(response.body().getNowPlayings());
+        if(query.equals("")){
+            switch (layoutName){
+                case Const.NOW_PLAYING:
+                    repository.getNowPlayingMovie(page, new OnMovieCallback() {
+                        @Override
+                        public void onSuccess(int page, List<Movies> movieList) {
+                            onSuccessResponse(page, movieList);
                         }
-                        currentPage = page;
-                        isFetching = false;
-                        refreshLayout.setRefreshing(false);
-                    }
-                    else{
-                        Toast.makeText(getActivity(), response.errorBody().string(), Toast.LENGTH_LONG).show();
-                    }
-                }catch(Exception e){
-                    e.printStackTrace();
-                }
-            }
 
-            @Override
-            public void onFailure(Call<MoviesResponse> call, Throwable t) {
-                Log.d("Trending", "onFailure: " + t.getLocalizedMessage());
-                Toast.makeText(getActivity(), "Failed" + t.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+                        @Override
+                        public void onFailure(String message) {
+                            onFailureResponse(message);
+                        }
+                    });
+                case Const.UPCOMING:
+                    repository.getUpcomingMovies(page, new OnMovieCallback() {
+                        @Override
+                        public void onSuccess(int page, List<Movies> movieList) {
+                            onSuccessResponse(page, movieList);
+                        }
+
+                        @Override
+                        public void onFailure(String message) {
+                            onFailureResponse(message);
+                        }
+                    });
+                case Const.POPULAR:
+                    repository.getPopularMovies(page, new OnMovieCallback() {
+                        @Override
+                        public void onSuccess(int page, List<Movies> movieList) {
+                            onSuccessResponse(page, movieList);
+                        }
+
+                        @Override
+                        public void onFailure(String message) {
+                            onFailureResponse(message);
+                        }
+                    });
             }
-        });
+        }else{
+            repository.searchMovie(query, page, new OnSearchCallback() {
+                @Override
+                public void onSuccess(int page, List<Movies> moviesList, String msg) {
+                    onSuccessResponse(page, moviesList);
+                }
+
+                @Override
+                public void onFailure(String msg) {
+                    onFailureResponse(msg);
+                }
+            });
+        }
+    }
+
+    private void onSuccessResponse(int page, List<Movies> movieList){
+        if(adapter == null){
+            movies = movieList;
+            adapter = new MovieAdapter(movieList,MovieFragment.this);
+            adapter.notifyDataSetChanged();
+            recyclerView.setAdapter(adapter);
+        }else{
+            adapter.appendList(movieList);
+        }
+        currentPage = page;
+        isFetching = false;
+        refreshLayout.setRefreshing(false);
+    }
+
+    private void onFailureResponse(String message){
+        Toast.makeText(getActivity(), message, Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -211,10 +189,10 @@ public class MovieFragment extends Fragment implements OnItemClick, SearchView.O
     public boolean onQueryTextChange(String s) {
         if (s.length() > 0) {
             adapter = null;
-            searchMovie(s,currentPage);
+            getRepositoryData(s,currentPage);
         }else{
             adapter = null;
-            loadData(currentPage);
+            getRepositoryData("",currentPage);
         }
         return true;
     }
@@ -223,7 +201,7 @@ public class MovieFragment extends Fragment implements OnItemClick, SearchView.O
     public void onRefresh() {
         adapter = null;
         currentPage = 1;
-        loadData(currentPage);
+        getRepositoryData("", currentPage);
     }
 
     @Override

@@ -18,6 +18,7 @@
         android:layout_height="wrap_content"
         android:text="@string/no_favorite_found"
         android:layout_gravity="center"
+        android:textColor="@color/text_white"
         />
 
 </FrameLayout>

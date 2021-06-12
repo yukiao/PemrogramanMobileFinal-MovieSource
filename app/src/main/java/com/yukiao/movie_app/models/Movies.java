@@ -5,7 +5,7 @@ import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 public class Movies {
-    private String id;
+    private int id;
     private String title;
 
     @SerializedName("poster_path")
@@ -16,11 +16,11 @@ public class Movies {
     @Expose
     private double rating;
 
-    public String getId() {
+    public int getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(int id) {
         this.id = id;
     }
 

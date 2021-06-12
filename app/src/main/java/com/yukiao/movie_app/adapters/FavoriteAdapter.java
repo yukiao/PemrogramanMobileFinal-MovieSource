@@ -20,8 +20,8 @@ import com.yukiao.movie_app.utils.OnItemClick;
 import java.util.List;
 
 public class FavoriteAdapter extends RecyclerView.Adapter<FavoriteAdapter.ViewHolder> {
-    private List<Favorite> favorites;
-    private OnItemClick onItemClick;
+    private final List<Favorite> favorites;
+    private final OnItemClick onItemClick;
 
     public  FavoriteAdapter(List<Favorite> favorites, OnItemClick onItemClick){
         this.favorites = favorites;
